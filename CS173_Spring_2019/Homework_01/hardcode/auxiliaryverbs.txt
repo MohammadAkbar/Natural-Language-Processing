@@ -8,3 +8,7 @@ may
 might
 and
 must
+Ought
+have
+do
+be

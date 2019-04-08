@@ -39,3 +39,12 @@ them
 their	
 theirs	
 themselves
+who
+which
+What
+Whose
+whom
+whoever
+whichever
+wherever
+whenever
