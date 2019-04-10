@@ -48,3 +48,8 @@ whoever
 whichever
 wherever
 whenever
+all
+anno
+anybody
+anyone
+anything
