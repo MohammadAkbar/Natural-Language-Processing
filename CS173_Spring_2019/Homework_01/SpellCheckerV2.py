@@ -7,17 +7,23 @@
 # In order to check spelling we need a dictionary.<br/>
 # For this program we will be using the dictionary `words.words()` from the `nltk` (natural language tool kit) module.
 
-# In[5]:
+# In[1]:
 
 
 import nltk
 nltk.download('wordnet')
+from nltk.corpus import wordnet as wn
+from nltk import FreqDist
+nltk.download('brown')
 from nltk.corpus import brown
+from ipypb import irange
+from operator import itemgetter, attrgetter
+from collections import deque
 
 
 # Now we import the regex package `re`.
 
-# In[6]:
+# In[2]:
 
 
 import re
@@ -25,7 +31,7 @@ import re
 
 # We will use `sortedcontainers` to improve performance.
 
-# In[7]:
+# In[3]:
 
 
 from sortedcontainers import SortedSet,SortedList
@@ -34,7 +40,7 @@ from sortedcontainers import SortedSet,SortedList
 # Unfortunately, `wordnet` does **NOT** include:<br/> `determiners`, `prepositions`, `pronouns`, `conjunctions`, `particles`, `auxiliary verbs`.<br/>
 # Lets add these to our dictionary manually
 
-# In[8]:
+# In[4]:
 
 
 ACCEPTED = SortedSet([])
@@ -47,14 +53,13 @@ import os
 
 def genCustom():
     filenms = [name for name in os.listdir("./hardcode") if name.endswith(".txt")]
-    print(filenms)
     for filenm in filenms:
         with open("./hardcode/"+filenm,'r') as file:
             print("fileopened",filenm,file)
             for line in file:
                 print("*", end =" ")
                 word = "".join(line.split())
-                if word not in brown.words():
+                if wn.synsets(word,'asrnv'):
                     ACCEPTED.add(word.lower())
     f = open("./hardcode/custom_dict.txt", "w")
     for word in ACCEPTED:
@@ -68,41 +73,42 @@ def readCustom():
             CUSTOMDICT.add(word.lower())
 
 def lookUp(word):
-    if word in CUSTOMDICT or word in brown.words():
-        return True
+    if word in CUSTOMDICT or wn.synsets(word,'asrnv'):
+        if word in ACCEPTED:
+            return True
+        else:
+            acceptWord(word)
+            return True
     return False
 
 #genCustom()
 readCustom()
+print("done reading")
 
 
 # Time to start parsing our file!
 
-# In[ ]:
+# In[5]:
 
 
 def acceptWord(word):
-    if word not in ACCEPTED:
-        ACCEPTED.add(word)
-    if word in notACCEPTED:
-        ACCEPTED.discard(word)
-    if word in ALLERRORS:
-        ALLERRORS.discard(word)
+    ACCEPTED.add(word)
+    notACCEPTED.discard(word)
+    ALLERRORS.discard(word)
     ALLWORDS.add(word)
 
 def rejectWord(word):
-    if word not in notACCEPTED:
-        notACCEPTED.add(word)
+    notACCEPTED.add(word)
     ALLERRORS.add(word)
 
-pattern = re.compile(r"([\w\-\\']*[a-zA-Z]+[\w\-\']*)") # regex for words with atleast 1 a-zA-Z
+pattern = re.compile(r"([\w\-\']*[a-zA-Z]+[\w\-\']*)") # regex for words with atleast 1 a-zA-Z
 with open("mobydick.txt") as file:                         # open input file
     for count , line in enumerate(file):                      # foreach line
         for match in re.finditer(pattern, line):                 # foreach word in line
-            word = line[match.start():match.end()].lower()          # words found in line, forced lowercase
+            word = line[match.start():match.end()].lower().strip("-")          # words found in line, forced lowercase
             if word in notACCEPTED:                                 # if word already memoized
                 continue                                               # go to next word
-            elif word in ACCEPTED or lookUp(word):                  # if word in wordnet, 'asrnv' means nouns,verbs,... 
+            elif lookUp(word):                  # if word in wordnet, 'asrnv' means nouns,verbs,... 
                 acceptWord(word)
             else:                                                   # else word NOT in wordnet
                 rejectWord(word)                                    # memoize as notACCEPTED
@@ -111,50 +117,52 @@ with open("mobydick.txt") as file:                         # open input file
 # Great! We have our file parsed. However, there are some false negatives in `notACCEPTED`.<br/>
 # Lets account for words ending with `'s` or `s'`
 
-# In[ ]:
+# In[6]:
 
 
 def goodApostrophe(word):
-    word_no_apst = re.sub("\'s$|s\'$",'',word)
+    word_no_apst = re.sub("(\'s$)|(s\'$)",'',word)
     if word == word_no_apst:
         return False
-    elif word_no_apst in ACCEPTED or lookUp(word):
+    elif lookUp(word_no_apst):
         return True
     else:
         return False
 
 
-# In[ ]:
+# In[7]:
 
 
 for word in notACCEPTED:
     if goodApostrophe(word):
         acceptWord(word)
+notACCEPTED = notACCEPTED.difference(ACCEPTED)
 
 
 # We've go as far as we can with dictionaries, but there are still more words to recognize.<br/>
 # Lets include compound words next `compound words` example: *gallant-cross-tree*
 
-# In[ ]:
+# In[8]:
 
 
-pattern_compound = re.compile(r"([^\-\s]+)")
+pattern_compound = re.compile(r"([^\-]+)")
 for word in notACCEPTED:
     accept_compound = True
-    roots = re.findall(pattern_compound, word)
+    roots = filter(None, word.split('-'))
     for r , root in enumerate(roots):
-        if root in ACCEPTED or lookUp(root) or goodApostrophe(root):
+        if lookUp(root) or goodApostrophe(root):
             continue
         else:
             accept_compound = False
             break
-    if word.startswith('-') or word.endswith('-'):
-        accept_compound = False
+    #if word.startswith('-') or word.endswith('-'):
+    #    accept_compound = False
     if accept_compound:
         acceptWord(word)
+notACCEPTED = notACCEPTED.difference(ACCEPTED)
 
 
-# In[ ]:
+# In[9]:
 
 
 from IPython.display import display, Markdown, Latex
@@ -169,7 +177,7 @@ display(Markdown( "**"
       + "** *correctly spelled*"))
 
 
-# In[ ]:
+# In[10]:
 
 
 from IPython.display import HTML, display
@@ -182,8 +190,10 @@ def insert():
 def delete():
     return 1
 
-def replace():
-    return 1
+def replace(a,b):
+    if a==b:
+        return 0
+    return 2
 
 def traceBack( strA , strB , table):
     align = []
@@ -230,105 +240,95 @@ def traceBack( strA , strB , table):
     print('\n'.join([linetop,linemid,linebot])) 
     #display(HTML(tabulate.tabulate(new_table, tablefmt='html')))
         
+def prep(strA , strB):
+    m , n = len(strA) , len(strB)
+    min_mn = min(m,n)
+    start = 0
+    end = 1
+    while( start < min_mn):
+        if strA[start] == strB[start]:
+            start+=1
+        else:
+            strA = strA[start:]
+            strB = strB[start:]
+            m , n = len(strA) , len(strB)
+            min_mn = min(m,n)
+            while( end < min_mn):
+                if strA[-end] == strB[-end]:
+                    end+=1
+                else:
+                    break
+            if(end==1):
+                break
+            strA = strA[:-end]
+            strB = strB[:-end]
+            break
+    return strA , strB;
+    
 def minEditDist(strA , strB , max_dist):
+    strA , strB = prep(strA,strB)
     m , n = len(strA) , len(strB)
     if m==0 or n==0 :
         return max(m,n)
     if abs(m - n) > max_dist:
-        return abs(m - n)
-    table = [['X']*(n+2) for i in range(m+2)]
-    for i in range(m+2):
+        return max_dist+1
+    table = [[0]*(n+1) for i in range(m+1)]
+    for i in range(m+1):
         rowMin = max_dist + 1
-        for j in range(n+2):
-            if( (i,j)==(0,0) ):
-                table[i][j] = 'X'
-            elif( (i,j)==(0,1) or (i,j)==(1,0)):
-                table[i][j] = '#'
-            elif( i==0 ):
-                table[i][j] = strB[j-2]
+        for j in range(n+1):
+            if( i==0 ):
+                table[i][j] = j
             elif( j==0 ):
-                table[i][j] = strA[i-2]
-            elif( i==1 ):
-                table[i][j] = j-1
-            elif( j==1 ):
-                table[i][j] = i-1
-            elif( strA[i-2] == strB[j-2] ):
-                table[i][j] = table[i-1][j-1]
+                table[i][j] = i
             else: 
                 table[i][j] = min(  table[i  ][j-1] + insert(),    # Insert 
                                     table[i-1][j  ] + delete(),    # Remove 
-                                    table[i-1][j-1] + replace())    # Replace
+                                    table[i-1][j-1] + replace(strA[i-1] , strB[j-1]))    # Replace
             # check termination
-            if( i!=0 and j!=0 ):
-                rowMin = min(rowMin,table[i][j])
-        if( i!=0 and j!=0 and rowMin > max_dist ):
+            rowMin = min(rowMin,table[i][j])
+        if( rowMin > max_dist ):
             return max_dist+1
     #if(table[i][j] < max_dist):
         #traceBack(strA,strB,table)
     #display(HTML(tabulate.tabulate(table, tablefmt='html')))
-    return table[i][j]
-minEditDist("intention" , "execution" , 9)
+    return int(table[i][j])
 
 
-# In[ ]:
+# In[11]:
 
 
-print(wn.synsets('answered'))
-
-
-# In[ ]:
-
-
-for lemma in wn.synset('stretch.v.02').lemmas():
-    print(lemma, lemma.frame_ids())
-    print(" | ".join(lemma.frame_strings()))
-
-
-# In[ ]:
-
-
-from nltk import FreqDist
-from nltk.corpus import brown
-frequency_list = FreqDist(w.lower() for w in brown.words() if re.search('[a-zA-Z]+',w) )
+frequency_list = FreqDist(w.lower().strip("-") for w in brown.words() if (re.search('[a-zA-Z]+',w) and lookUp(w)) )
 for word in ALLWORDS:
     frequency_list[word.lower()] += 1
-    break
 
 
-# In[ ]:
+# In[12]:
 
 
-from ipypb import irange
-from operator import itemgetter, attrgetter
-from collections import deque
-print("here")
+notACCEPTED = notACCEPTED.difference(ACCEPTED)
 
 
-# In[ ]:
+# In[13]:
 
 
-for i in irange(0,len(notACCEPTED[:]),1):
+for i in irange(0,len(notACCEPTED),1):
     misspelled = notACCEPTED[i]
-    minEdit = -len(misspelled)
-    top3 = deque([[" ",minEdit,0],[" ",minEdit,0],[" ",minEdit,0],[" ",minEdit,0]],3)
-    minEdit = top3[2][1]
-    for j , Dword in enumerate(frequency_list):
-        editDist = -minEditDist(misspelled , Dword , -minEdit)
-        if editDist >= minEdit:
-            f = -frequency_list[Dword]
-            entry = [Dword,editDist,f]
-            top4 = list(top3)
-            minEdit = top3[2][1]
-            top4 += [entry]
-            top4 = sorted(top4, key=itemgetter(1,2))
-            top3 = deque(top4,3)
-    top3list = list(top3)
-    top3list.reverse()
-    print(misspelled,":",' , '.join([row[0]+" d="+str(-row[1])+" f="+str(-row[2]) for row in top3list]))
+    maxEdit = len(misspelled)
+    top3 = [[" ",maxEdit,0],[" ",maxEdit,0],[" ",maxEdit,0]]
+    for DwordR in frequency_list:
+        Dword = str(DwordR)
+        editDist = minEditDist(misspelled , Dword , maxEdit)
+        if editDist <= maxEdit:
+            f = int(frequency_list[Dword])
+            entry = [ Dword , editDist , f ]
+            top3 += [entry]
+            top3 = sorted(top3, key=lambda x: (x[1], -x[2]))[:3]
+            maxEdit = int(top3[2][1])
+    print(misspelled + ": " + ', '.join( list(map( lambda x : x[0],top3))))
 
 
 # In[ ]:
 
 
-
+print(lookUp("world's"))
 
