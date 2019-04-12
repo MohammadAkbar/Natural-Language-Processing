@@ -13259,15 +13259,6 @@ Lets add these to our dictionary manually</p>
             <span class="n">word</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
             <span class="n">CUSTOMDICT</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
 
-<span class="k">def</span> <span class="nf">lookUp</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">CUSTOMDICT</span> <span class="ow">or</span> <span class="n">wn</span><span class="o">.</span><span class="n">synsets</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="s1">&#39;asrnv&#39;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">ACCEPTED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">acceptWord</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="kc">False</span>
-
 <span class="c1">#genCustom()</span>
 <span class="n">readCustom</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;done reading&quot;</span><span class="p">)</span>
@@ -13309,27 +13300,27 @@ Lets add these to our dictionary manually</p>
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">acceptWord</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">lookUp</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">CUSTOMDICT</span> <span class="ow">or</span> <span class="n">wn</span><span class="o">.</span><span class="n">synsets</span><span class="p">(</span><span class="n">word</span><span class="p">,</span><span class="s1">&#39;asrnv&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">ACCEPTED</span><span class="p">:</span>
+        <span class="n">acceptWord</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">rejectWord</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+<span class="k">def</span> <span class="nf">acceptWord</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
     <span class="n">ACCEPTED</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
     <span class="n">notACCEPTED</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
-    <span class="n">ALLERRORS</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
-    <span class="n">ALLWORDS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">rejectWord</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+    <span class="n">ACCEPTED</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
     <span class="n">notACCEPTED</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
-    <span class="n">ALLERRORS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
 
-<span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([\w\-\&#39;]*[a-zA-Z]+[\w\-\&#39;]*)&quot;</span><span class="p">)</span> <span class="c1"># regex for words with atleast 1 a-zA-Z</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;mobydick.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>                         <span class="c1"># open input file</span>
-    <span class="k">for</span> <span class="n">count</span> <span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>                      <span class="c1"># foreach line</span>
-        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>                 <span class="c1"># foreach word in line</span>
-            <span class="n">word</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>          <span class="c1"># words found in line, forced lowercase</span>
-            <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">notACCEPTED</span><span class="p">:</span>                                 <span class="c1"># if word already memoized</span>
-                <span class="k">continue</span>                                               <span class="c1"># go to next word</span>
-            <span class="k">elif</span> <span class="n">lookUp</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>                  <span class="c1"># if word in wordnet, &#39;asrnv&#39; means nouns,verbs,... </span>
-                <span class="n">acceptWord</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>                                                   <span class="c1"># else word NOT in wordnet</span>
-                <span class="n">rejectWord</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>                                    <span class="c1"># memoize as notACCEPTED</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([\w\-\&#39;]*[a-zA-Z]+[\w\-\&#39;]*)&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;mobydick.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>                      <span class="c1"># foreach line</span>
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+            <span class="n">word</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">lookUp</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
 </pre></div>
 
     </div>
@@ -15173,37 +15164,6 @@ yojo: kyoto, to, so
 yojo&#39;s: jobs, joys, jogs
 zontal: frontal, mental, mortal
 zontally: mentally, mortally, orally
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">lookUp</span><span class="p">(</span><span class="s2">&quot;world&#39;s&quot;</span><span class="p">))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>False
 </pre>
 </div>
 </div>
