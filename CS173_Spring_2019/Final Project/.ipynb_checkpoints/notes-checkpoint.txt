@@ -1,0 +1,10 @@
+Reddit login
+username: "NLPfinal"
+password: "komail"
+
+Reddit app
+name: "RedditProgram"
+secret: "ACPdbSJSDLV8U3EAjla2MhOj1zg"
+
+packages:
+"sudo pip install praw"
